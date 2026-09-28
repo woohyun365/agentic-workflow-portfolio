@@ -53,6 +53,17 @@
 <li>등록·리뷰 packet 생성 helper로 수작업 비용 제거(수작업이 번거로우면 통제 밖 경로로 우회하게 되는 운영 위험).</li>
 <li>비용 실측: Parent+child+QA+복구 전체를 같은 task·snapshot에서 비교하는 측정 설계.</li>
 </ul>
+<h2>5. 재설계 프로그램 — Codex 전용 workflow를 공통 계약 + host adapter로 (H4-G → Q)</h2>
+<p>처음 만든 workflow는 Codex 전용이어서, 도구를 바꾸면 같은 품질 절차가 적용되지 않았습니다. 기존 구조를 복제하지 않고, <b>공통 계약을 먼저 만들고 Codex와 Claude를 각각 그 계약의 소비자로 다시 붙이는</b> 순서로 단계를 나눴습니다. 각 단계는 독립된 PR·완료 기준·rollback을 가집니다.</p>
+<table>
+<tr><th>단계</th><th>풀려는 문제</th><th>해결 방향</th><th>상태</th></tr>
+<tr><td>G 공통 계약</td><td>공통 문서에 Codex 전제(모델명·effort·도구)가 섞여 있어 다른 host가 따라갈 수 없음</td><td>71개 문서를 graph로 감사하고, 31개 파일·341개 host 의존 후보를 문단 단위로 공통/Codex 전용/조건부/역사로 분류. 공통 계약·<code>.plans</code> 계획 lifecycle·synthetic 제3 adapter conformance 구현</td><td>완료(PR #484 병합)</td></tr>
+<tr><td>C Codex 재접합</td><td>Codex가 공통 계약을 우회하는 &quot;특권 경로&quot;로 남음</td><td>Codex도 공통 계약을 소비하도록 재연결. 기존의 정상 모델/effort/QA/복구 동작은 회귀 oracle로 고정하되 구조·버그는 보존하지 않음(preflight 버그 수정)</td><td>완료(PR #485 병합)</td></tr>
+<tr><td>L Claude adapter</td><td>Claude Code에서 같은 품질 절차(모델 통제·독립 QA)를 강제할 방법이 없음</td><td>실제 호출 경로(등록 → hook → 결과 수집 → 공통 QA)에 연결, 공식 문서 대조로 hook fail-open 확인 후 권한 gate 재설계</td><td>진행 중(PR #487, CI 통과·병합 전, live 검증 대기)</td></tr>
+<tr><td>B 교차 CLI 리뷰</td><td>한 host의 리뷰를 다른 host 모델에 맡기는 실제 실행기가 없음(fake process만)</td><td>Lead 전용·구독 인증·읽기 전용·단발성 실행기, 실행 전 negative 검증에서 provider 호출 0회 보장</td><td>설계</td></tr>
+<tr><td>Q 통합 자격 검증</td><td>정적 테스트 PASS를 실제 모델·권한·수명주기 동작으로 오인할 위험</td><td>양방향 maker/checker, Codex↔Claude 계획 인계, 실패 경로·정리까지 실제 실행으로 판정</td><td>설계</td></tr>
+</table>
+<p>공통 원칙: 파일 수 대칭이 아니라 <b>기능 대등성(capability parity)</b>을 목표로 하고, 테스트·fixture도 &quot;Codex 가정이 정답으로 남아 있지 않은지&quot; 감사 대상에 넣었습니다. Live 검증은 별도의 신뢰 경계로 두고, 지원되지 않는 모드는 PASS 대신 NO-GO로 기록합니다.</p>
 <h2>폴더 안내</h2>
 <table>
 <tr><th>경로</th><th>내용</th></tr>
