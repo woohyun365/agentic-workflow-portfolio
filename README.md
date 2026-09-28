@@ -27,6 +27,46 @@ flowchart LR
 | 2026-09-28 | ⑥-2 Claude Code 연결 | 새 도구에서도 모델 통제·독립 검증이 실제로 지켜지는가 | Claude Code adapter: 등록된 작업만 실행, 모델 사전 검사, 실행 후 실제 모델 대조, 독립 리뷰 | 잘못된 모델 요청 차단, 독립 리뷰가 결함 5건 적발 |
 | 다음 | ⑦ 설계 단계 | Claude에서 추론 강도(effort)가 통제되지 않음, 비용 절감 여부가 측정되지 않음 | 역할 × 모델 × effort profile, 실패 원인별 복구, 전체 비용 실측 | [ROADMAP.md](ROADMAP.md) |
 
+## 설계 철학 — 무엇을 근거로 이렇게 설계했나
+
+모든 설계 결정의 기준은 [Agentic Engineering methodology](docs/development/agentic-engineering-methodology.md)입니다.
+한 문장으로 요약하면 **Policy-first · Contract-driven · Evidence-driven · Harness-engineered · Human-governed Agentic Programming**입니다.
+"AI가 코드를 더 많이 쓰게 하기"가 아니라, **AI가 신뢰할 수 있는 일을 하도록 환경과 피드백 루프를 설계하는 것**이 목표입니다.
+
+```mermaid
+flowchart TB
+  subgraph P["설계 원칙 (methodology)"]
+    P1["Context Engineering<br/>필요한 정보만, 최신 것부터"]
+    P2["Harness Engineering<br/>테스트·CI가 피드백 루프"]
+    P3["Evidence-driven<br/>말이 아니라 실행 결과로 판정"]
+    P4["Human-governed<br/>정책·권한·비용은 사람이 결정"]
+  end
+  subgraph M["구현한 장치"]
+    M1["신뢰 순서 · 문서 graph · 작업 packet"]
+    M2["회귀·negative 테스트 · 공통 계약"]
+    M3["독립 리뷰 · 실제 모델/결과 대조"]
+    M4["권한 gate · 승인 경계 · 한 번만 복구"]
+  end
+  P1 --> M1
+  P2 --> M2
+  P3 --> M3
+  P4 --> M4
+  M1 & M2 & M3 & M4 --> R["결과: 도구·모델이 바뀌어도<br/>같은 품질 절차와 예측 가능한 비용"]
+```
+
+| 원칙 | 참고한 근거 | 이 저장소에서 푼 문제 → 설계 |
+|---|---|---|
+| **Context Engineering** | [Anthropic — Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) | 오래된 대화가 최신 코드를 이기는 문제 → 신뢰 순서 고정, 필요한 문서만 단계적으로 읽기, 전체 이력 대신 작업 packet |
+| **Harness Engineering** | [OpenAI — Harness engineering](https://openai.com/index/harness-engineering/) | 긴 prompt로 통제하려던 방식의 한계 → 테스트·CI·정책 검사를 agent의 피드백 루프로 사용 |
+| **Evidence-driven** | 방법론 문서의 "Evaluation / Evidence-driven Development" | agent의 "완료" 보고를 믿던 문제 → 실행 결과·독립 리뷰·실제 모델 관측으로만 완료 판정 |
+| **Multi-agent는 선택 사항** | [Anthropic — Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) | agent 수 = 품질이라는 착각 → direct-first, 독립적인 일이 있을 때만 위임, 짧은 인계 기록 |
+| **Human-governed** | [Microsoft — Agentic DevOps](https://devblogs.microsoft.com/all-things-azure/getting-started-with-agentic-devops-part-1-foundations/), [DORA 2025](https://dora.dev/research/2025/dora-report/) | "AI는 조직의 강점과 약점을 모두 증폭한다" → 자동화 범위보다 테스트·권한 경계를 먼저 만듦. 정책·비용·배포는 사람이 결정 |
+| **Vibe Coding 배제** | [Martin Fowler — Agentic Programming](https://martinfowler.com/bliki/AgenticProgramming.html) | 생성된 코드를 검토 없이 쓰는 위험 → 코드·계약·테스트·diff를 검토하고 실패를 숨기지 않음 |
+
+의도적으로 **채택하지 않은 것**도 기록했습니다. Full SDD(명세가 모든 코드를 생성)와 완전 자율 개발(Autonomous Software Factory)은
+현재 규모와 사람의 판단이 필요한 정책을 고려해 부분 적용하거나 배제했습니다(근거와 재검토 조건은 방법론 문서 참고).
+외부 자료는 설계 방향의 참고이며, 이 저장소의 생산성 향상을 입증한 benchmark가 아닙니다.
+
 ## 해결한 문제와 방법
 
 ### 1. Context Engineering — "무엇을, 언제, 얼마나 읽힐 것인가"
