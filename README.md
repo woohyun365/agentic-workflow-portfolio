@@ -1,100 +1,77 @@
-# Context Engineering 기반 AI Agentic Coding System — 모델 중립 공통 계약·Adapter와 비용·품질 균일화
+# AI Agentic Coding System — Context Engineering · Multi-agent · 모델 중립 Workflow
 
-1인 풀스택 서비스(대학생 룸메이트 매칭, 비공개 저장소)를 AI coding agent(OpenAI Codex, Anthropic Claude Code)와
-개발하며 설계·구현한 **agent workflow architecture**의 발췌본입니다. 학교 식별 정보는 제거했습니다
-(프로젝트명 `Roommate Matching`, 역할 접두어 `repo_`). 제품 코드는 포함하지 않았고 PR 번호는 비공개 저장소 기준입니다.
+1인 풀스택 서비스(대학생 룸메이트 매칭, 비공개 저장소)를 AI coding agent와 개발하면서
+**"agent가 누가·언제 일해도 같은 품질과 예측 가능한 비용으로 결과를 내게 하려면?"**이라는 질문을 풀어 온 과정과 결과물입니다.
+이 저장소에는 그 과정에서 만든 workflow 문서·역할 설정·검증 코드를 발췌했습니다(학교 식별 정보 제거, 제품 코드 미포함).
 
-> 한 줄 요약: **Codex 전용으로 묶여 다른 agent·모델을 쓸 수 없던 workflow를 모델 중립 공통 계약으로 추상화하고 Codex·Claude Code를 adapter로 연결했습니다. 그 위에서 "무엇을 읽히고(Context), 누가 어떤 모델로 하고(Routing), 누가 검증하는가(Multi-agent QA)"를 저장소가 결정하게 해, 도구·모델이 바뀌어도 비용과 품질이 같은 기준을 따르게 했습니다.**
+## 한눈에 보기
 
-## 1. 문제 — 특정 도구에 묶인 workflow와 agent 결과의 비용·품질 편차
+```mermaid
+flowchart LR
+  A["① 1인 개발<br/>AI agent로 구현"] --> B["② 고민<br/>품질·비용이 들쭉날쭉"]
+  B --> C["③ Context Engineering<br/>무엇을 읽힐 것인가"]
+  C --> D["④ Multi-agent 구조<br/>누가, 어떤 모델로, 누가 검증"]
+  D --> E["⑤ 새 문제<br/>Codex 전용이라 다른 모델 불가"]
+  E --> F["⑥ 모델 중립 공통 계약<br/>+ Codex / Claude adapter"]
+  F --> G["⑦ 다음<br/>모델·effort profile, 비용 실측"]
+```
 
-| 관찰한 문제 | 결과 |
+| 시기 | 단계 | 고민(문제) | 선택(해결) | 확인한 결과 |
+|---|---|---|---|---|
+| 2026-03 | ① 1인 개발 시작 | 혼자서 기획·FE·BE·인프라를 모두 해야 함 | AI agent에게 구현을 맡기고, 공통 규칙은 `AGENTS.md` 하나에 모음 | agent가 저장소 규칙을 읽고 작업 |
+| 2026-03~08 | ② 품질 편차 발견 | 같은 요청도 대화 이력·개인 설정에 따라 결과가 달라지고, "완료"라는 보고와 실제가 다름 | "agent의 말"이 아니라 **테스트·CI·diff**로 완료를 판정하기로 함 | 완료 기준을 실행 결과로 고정 |
+| 2026-08 | ③ Context Engineering | 오래된 대화·로그가 최신 코드보다 우선되고, 필요 없는 문서까지 읽어 비용 낭비 | 신뢰 순서(현재 요청 → 코드 → 정책 → 계획 → 과거 기록), 필요한 문서만 단계적으로 읽기, 요청 분석·계획 하네스 | 작업마다 읽을 문서와 근거가 정해짐 |
+| 2026-08-31 | ④ Multi-agent 구조 (Codex) | 모든 작업을 비싼 모델로 하거나, 위험해 보이는 단어로 추론 강도를 정해 비용·품질이 흔들림 | 필요할 때만 위임, 쓰기 담당 1명, 저장소를 읽은 뒤 **위험도와 추론 난이도를 분리**해 모델·effort 결정, 독립 리뷰 | 구현·조사·추출을 저가 모델로 실행해 사전 기준·독립 QA 통과(09-24 실측) |
+| 2026-09 | ⑤ 새 문제 | 주간 사용량 한도로 도구를 바꿔야 했는데, workflow가 Codex에 묶여 다른 agent·모델에서는 같은 품질 절차가 적용되지 않음 | 기존 구조를 복제하지 않고 **공통 계약을 먼저 추상화**하기로 결정 | — |
+| 2026-09-27 | ⑥ 모델 중립 workflow | 문서·코드·테스트 곳곳에 특정 도구의 전제가 섞여 있음 | 문서 71개와 Codex 의존 후보 341곳을 감사해 공통/전용으로 분리, Codex도 공통 계약의 "사용자"로 재연결 | 공통 계약·Codex 재연결 병합, 가상의 제3 도구로 확장성 테스트 |
+| 2026-09-28 | ⑥-2 Claude Code 연결 | 새 도구에서도 모델 통제·독립 검증이 실제로 지켜지는가 | Claude Code adapter: 등록된 작업만 실행, 모델 사전 검사, 실행 후 실제 모델 대조, 독립 리뷰 | 잘못된 모델 요청 차단, 독립 리뷰가 결함 5건 적발 |
+| 다음 | ⑦ 설계 단계 | Claude에서 추론 강도(effort)가 통제되지 않음, 비용 절감 여부가 측정되지 않음 | 역할 × 모델 × effort profile, 실패 원인별 복구, 전체 비용 실측 | [ROADMAP.md](ROADMAP.md) |
+
+## 해결한 문제와 방법
+
+### 1. Context Engineering — "무엇을, 언제, 얼마나 읽힐 것인가"
+| 문제 | 해결 |
 |---|---|
-| **workflow가 Codex 전용(공통·중립 계층 없음)** | **다른 agent·모델(Claude Code 등)을 쓰면 같은 절차·품질 기준이 적용되지 않음. 주간 한도 소진으로 도구를 바꿔야 할 때 실제로 문제가 됨** |
-| 역할·모델·effort가 개인/전역 설정에 따라 달라짐(저장소에 기본값 없음) | clone·세션마다 같은 요청의 품질이 달라짐 |
-| 탐색 로그·중간 산출물·전체 대화가 parent context에 누적 | context 낭비, 오래된 정보가 최신 코드보다 우선되는 오류 |
-| "위험해 보이는 단어"로 effort를 정함(위험도와 추론 난이도가 섞임) | 쉬운 작업에 비싼 추론, 어려운 작업에 부족한 추론 |
-| 모든 child를 가장 비싼 모델로 실행 / 또는 전면 저가 모델 | 주간 사용량 한도 조기 소진 / 품질 저하 위험 |
-| agent의 "완료" 보고·역할 이름·설정 파일 존재를 근거로 판단 | 실제 모델·권한·검증이 지켜졌는지 알 수 없음 |
+| 오래된 대화·메모가 현재 코드보다 우선됨 | **신뢰 순서 고정**: 현재 요청 → 현재 코드·테스트 → 정책/설계 문서 → 활성 계획 → 과거 기록 |
+| 모든 문서를 읽어 context·비용 낭비 | 문서를 graph로 연결하고 **작업에 필요한 최소 문서만** 단계적으로 읽기 |
+| 위임할 때 전체 대화를 넘김 | 목적·범위·근거 위치·완료 기준·중단 조건만 담은 **작업 packet** |
+| 긴 작업이 대화 기억에 의존 | 목표·branch·변경 파일·검증·다음 행동만 남기는 **짧은 인계 기록**, 모든 도구가 같은 계획 폴더 사용 |
 
-## 2. 해결 설계
+### 2. Multi-agent 구조 — "누가, 어떤 모델로, 누가 검증하는가"
+| 문제 | 해결 |
+|---|---|
+| agent를 많이 쓸수록 좋다는 착각 | **direct-first**: 도구 → 단일 agent → 독립적인 일이 있을 때만 위임 |
+| 여러 agent가 같은 파일을 수정 | **쓰기 담당은 한 명**, 결과 통합·판정은 리더만 |
+| 위험한 단어 = 어려운 작업이라는 오판 | 저장소를 읽은 뒤 **위험도와 추론 난이도를 분리**해 두 번 판정 |
+| 비싼 모델 일괄 사용 vs 저가 모델의 품질 위험 | 검증 가능한 작업만 저가 모델, 기본·최종 검토는 상위 모델, 실패 시 **한 번만** 복구 |
+| 만든 사람이 스스로 PASS | **별도 컨텍스트의 리뷰어**가 요구사항·diff만 보고 판정하고, 리더가 지적을 재현해 확정 |
 
-### 2.1 Context Engineering — 무엇을, 언제, 얼마나 읽힐 것인가
-- **신뢰 순서 고정**: 현재 요청 → 현재 코드·계약·테스트 → 정책/설계 문서 → 활성 계획 → 과거 기록.
-  과거 대화·메모리는 기본 입력이 아닙니다(`AGENTS.md` §1, 방법론 문서 "Context Engineering").
-- **Progressive disclosure / 문서 graph**: 71개 개발 문서를 intent → 권한 → context → 위임 → QA → 인계로 연결된 graph로 감사하고,
-  작업에 필요한 최소 readset만 읽게 했습니다(`agent-workflows/README.md`, `adapters/README.md`).
-- **Scoped packet**: child에게 전체 이력 대신 목적·범위·source 포인터·acceptance·출력 형식·중단 조건만 전달합니다
-  (`request-intake/delegation.md`). 독립 리뷰어에게는 builder의 추론·기대 결론을 주지 않습니다(`qa.md`).
-- **Bounded checkpoint**: 긴 작업은 objective / branch·HEAD / 변경 파일 / 검증 / 다음 행동 / blocker만 인계합니다
-  (`session-continuity.md`). 계획은 host 공통 `.plans/` 하나에 두고 Codex↔Claude가 같은 계획을 이어받습니다.
+### 3. 모델 중립 workflow — "도구가 바뀌어도 같은 절차"
+| 문제 | 해결 |
+|---|---|
+| workflow가 한 도구에 묶여 있음 | **공통 계약**(권한 → 문서 탐색 → 위임 → 독립 검토 → 인계)과 **도구별 adapter** 분리 |
+| 기존 도구의 좋은 동작을 잃을 위험 | 기존 동작을 **회귀 테스트로 고정**한 뒤 재연결(구조·버그는 보존하지 않음) |
+| 새 도구 추가 시 공통 코드 수정 필요 | 가상의 제3 도구를 붙이는 **적합성 테스트** |
+| "설정 파일이 있다 = 지켜진다"는 착각 | 규칙마다 강도 표기: 테스트로 강제 / 문서 권고 / agent 판단 / 도구가 강제 |
+| 통제 장치(hook)가 고장 나면? | 공식 문서 원문으로 "고장 시 통제가 풀린다"를 확인하고, 권한 규칙과 결합해 **고장 시 사람 승인**으로 넘어가게 재설계 |
 
-### 2.2 적응형 모델·effort 라우팅 — 비용을 줄이되 품질 하한을 지킨다
-- **두 번 판정**: Pass 1은 요청의 의도·위험, Pass 2는 저장소를 실제로 읽은 뒤의 근거로 역할과 effort를 정합니다.
-  위험도(impact)와 추론 난이도(complexity)를 분리했습니다(`agentic-architecture-decisions.md` DA-009).
-- **유한 profile**: 검증 가능한 bounded 작업만 저가 모델로 보냅니다(Codex: 구현·조사 Sol, 고정 추출 Luna / 기본·최종 QA Astra).
-  공식 단가 비율은 Sol/Astra 20%, Luna/Astra 1%이지만 **절감률을 주장하지 않습니다**
-  (비교에는 Parent+child+QA+재작업 전체가 필요, `agentic-orchestration-case-study.md` "비용 가설과 관측 한계").
-- **한 번의 복구**: 저가 모델 실패 시 writer를 회수하고 기본 모델로 한 번만 복구합니다. 권한·quota 문제를 모델 교체로 우회하지 않습니다.
-- **Claude 적용**: task profile(haiku 추출 / sonnet 표준 / opus 복잡·독립 리뷰)을 Lead가 고르고, 실행 직전 hook이
-  요청 모델을 검사하며 실행 후 실제 모델을 기록해 대조합니다.
+## 결과와 근거
 
-### 2.3 Multi-agent architecture — 필요한 때만, 한 명이 쓰고, 다른 한 명이 검증
-- **Direct-first**: 결정적 도구 → 단일 agent → 독립 증거가 있을 때만 bounded child(`orchestration.md` pattern selector).
-- **One writer + leader synthesis**: 쓰기 owner는 하나, 결과 통합·판정은 Parent만 합니다. 동시 writer는 lease로 직렬화했습니다.
-- **Maker-checker 독립 QA**: fresh context 리뷰어가 요구사항·snapshot·diff만 보고 판정하고, Parent가 finding을 재현한 뒤 판정합니다.
-  PASS는 미실행 검증(`notRun`)·gap이 있으면 거부됩니다. 반복은 기본 2회로 제한합니다.
+- 공통 계약·Codex 재연결 변경 병합, Claude Code adapter는 CI 통과(병합 전).
+- workflow 테스트 467개, 저장소 정책 테스트 1,116개 통과.
+- 상세 수치와 한계: [EVIDENCE.md](EVIDENCE.md) / 설계만 된 항목: [ROADMAP.md](ROADMAP.md)
+- 측정하지 않은 것: 생산성·비용 절감률(단가 비율만 확인, 전체 사용량 비교는 다음 과제).
 
-### 2.4 Host-neutral 공통 계약 + Codex/Claude adapter — 도구가 바뀌어도 같은 품질 절차
-- 공통 계약(실행·orchestration·QA·위임·계획 lifecycle)이 책임을 소유하고, adapter는 host의 모델·권한·수명주기만 연결합니다.
-- Codex도 공통 계약의 소비자로 재연결했고, synthetic 제3 adapter conformance test로 새 host 확장성을 검사합니다.
-- 모든 규칙에 강도를 표기합니다: `deterministic-static`(테스트) / `advisory-policy`(문서) / `model-mediated`(agent 판단) /
-  `native-runtime`(host 강제). 정적 PASS를 실제 모델·권한 입증으로 세지 않습니다.
-- 공식 문서 원문 대조로 "hook이 고장 나면 통제가 조용히 풀린다(fail-open)"를 확인하고, 역할별 `ask` 권한 규칙 +
-  `PermissionRequest` grant로 재설계해 고장 시 자동 승인 대신 **사람 승인**으로 넘어가게 했습니다.
-
-## 3. 결과 요약 (상세: [EVIDENCE.md](EVIDENCE.md))
-
-- 공통 계약 재설계·Codex 재연결 PR 2건 병합, Claude adapter PR CI 11/11 통과(병합 전).
-- workflow 테스트 467개, 저장소 정책 테스트 1,116개 통과(최신 작업 트리).
-- Codex: bounded 구현·조사·추출을 저가 모델 xhigh로 실행해 각 oracle과 독립 QA 통과(표본 소수, 한계 명시).
-- Claude: 잘못된 모델 요청 사전 차단, Sonnet 구현 → Opus 독립 리뷰 → 완료 판정, 독립 리뷰가 근거 없는 주장과 우회 결함 5건 적발.
-
-## 4. 다음 문제 해결 방향 (설계 단계, [ROADMAP.md](ROADMAP.md))
-
-- Claude subagent를 (역할 × 모델 × effort 단계) profile로 재설계: 지금은 child가 Parent effort를 그대로 상속해 비용·품질이 세션마다 달라짐.
-- 실패 원인별 복구: 정보가 충분한데 오답 → 상위 모델, 누락·중단 → effort 상향(공식 권고 근거).
-- 등록·리뷰 packet 생성 helper로 수작업 비용 제거(수작업이 번거로우면 통제 밖 경로로 우회하게 되는 운영 위험).
-- 비용 실측: Parent+child+QA+복구 전체를 같은 task·snapshot에서 비교하는 측정 설계.
-
-## 5. 재설계 프로그램 — Codex 전용 workflow를 공통 계약 + host adapter로 (H4-G → Q)
-
-처음 만든 workflow는 Codex 전용이어서, 도구를 바꾸면 같은 품질 절차가 적용되지 않았습니다. 기존 구조를 복제하지 않고,
-**공통 계약을 먼저 만들고 Codex와 Claude를 각각 그 계약의 소비자로 다시 붙이는** 순서로 단계를 나눴습니다.
-각 단계는 독립된 PR·완료 기준·rollback을 가집니다.
-
-| 단계 | 풀려는 문제 | 해결 방향 | 상태 |
-|---|---|---|---|
-| G 공통 계약 | 공통 문서에 Codex 전제(모델명·effort·도구)가 섞여 있어 다른 host가 따라갈 수 없음 | 71개 문서를 graph로 감사하고, 31개 파일·341개 host 의존 후보를 문단 단위로 공통/Codex 전용/조건부/역사로 분류. 공통 계약·`.plans` 계획 lifecycle·synthetic 제3 adapter conformance 구현 | 완료(PR #484 병합) |
-| C Codex 재접합 | Codex가 공통 계약을 우회하는 "특권 경로"로 남음 | Codex도 공통 계약을 소비하도록 재연결. 기존의 정상 모델/effort/QA/복구 동작은 회귀 oracle로 고정하되 구조·버그는 보존하지 않음(preflight 버그 수정) | 완료(PR #485 병합) |
-| L Claude adapter | Claude Code에서 같은 품질 절차(모델 통제·독립 QA)를 강제할 방법이 없음 | 실제 호출 경로(등록 → hook → 결과 수집 → 공통 QA)에 연결, 공식 문서 대조로 hook fail-open 확인 후 권한 gate 재설계 | 진행 중(PR #487, CI 통과·병합 전, live 검증 대기) |
-| B 교차 CLI 리뷰 | 한 host의 리뷰를 다른 host 모델에 맡기는 실제 실행기가 없음(fake process만) | Lead 전용·구독 인증·읽기 전용·단발성 실행기, 실행 전 negative 검증에서 provider 호출 0회 보장 | 설계 |
-| Q 통합 자격 검증 | 정적 테스트 PASS를 실제 모델·권한·수명주기 동작으로 오인할 위험 | 양방향 maker/checker, Codex↔Claude 계획 인계, 실패 경로·정리까지 실제 실행으로 판정 | 설계 |
-
-공통 원칙: 파일 수 대칭이 아니라 **기능 대등성(capability parity)**을 목표로 하고, 테스트·fixture도 "Codex 가정이 정답으로 남아
-있지 않은지" 감사 대상에 넣었습니다. Live 검증은 별도의 신뢰 경계로 두고, 지원되지 않는 모드는 PASS 대신 NO-GO로 기록합니다.
-
-## 폴더 안내
+## 저장소 구성
 
 | 경로 | 내용 |
 |---|---|
-| `AGENTS.md`, `CLAUDE.md` | 모든 agent 공통 저장소 지침 / Claude 진입점 |
-| `docs/development/agentic-engineering-methodology.md` | 채택한 방법론(Context Engineering, Harness Engineering 등)과 적용 수준 |
-| `docs/development/agentic-orchestration-case-study.md` | parent–subagent·모델 라우팅 설계의 문제·대안·실측·한계 |
-| `docs/development/agent-workflows/` | 공통 계약과 `adapters/`(Codex·Claude·교차 인계) |
-| `.codex/`, `.claude/` | 역할 정의(TOML/Markdown), Claude hook·권한 설정 |
-| `scripts/agents/{common,codex,claude,bridge}` | 계약을 실제로 소비하는 코드(라우팅·profile·등록·hook·collector) |
-| `scripts/ci/*.test.mjs` | 회귀·negative 테스트 |
-| `portfolio.pdf` | 이 README와 EVIDENCE·ROADMAP의 PDF 버전 |
+| `AGENTS.md`, `CLAUDE.md` | 모든 agent가 읽는 공통 규칙 / Claude Code 진입점 |
+| `docs/development/agentic-engineering-methodology.md` | 채택한 방법론과 적용 수준 |
+| `docs/development/agentic-orchestration-case-study.md` | multi-agent·모델 라우팅의 문제·대안·실측·한계 |
+| `docs/development/agent-workflows/` | 공통 계약과 `adapters/`(Codex·Claude Code) |
+| `.codex/`, `.claude/` | 도구별 역할 정의와 설정 |
+| `scripts/agents/` | 공통 계약·라우팅·검증을 실제로 수행하는 코드 |
+| `scripts/ci/` | 회귀·negative 테스트 |
 
-발췌본이라 원 저장소의 다른 문서로 가는 일부 상대 링크는 열리지 않습니다.
+발췌본이라 원 저장소의 다른 문서로 가는 일부 링크는 열리지 않습니다.
