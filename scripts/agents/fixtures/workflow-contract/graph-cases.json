@@ -1,0 +1,103 @@
+{
+  "evidenceClass": "synthetic-test-only-graph-not-runtime",
+  "graph": {
+    "contracts": ["authority", "qa"],
+    "entries": ["entry"],
+    "adapters": {
+      "codex": ["codex-native-review"],
+      "claude": ["claude-native-review"],
+      "synthetic-third": []
+    },
+    "nodes": [
+      { "id": "entry", "current": true },
+      { "id": "authority", "current": true, "canonicalFor": ["authority"] },
+      { "id": "qa", "current": true, "canonicalFor": ["qa"] },
+      {
+        "id": "codex",
+        "current": true,
+        "host": "codex",
+        "requiredCapabilities": ["codex-native-review"]
+      },
+      {
+        "id": "claude",
+        "current": true,
+        "host": "claude",
+        "requiredCapabilities": ["claude-native-review"]
+      },
+      {
+        "id": "old-codex",
+        "current": false,
+        "host": "codex",
+        "requiredCapabilities": ["retired-model"]
+      }
+    ],
+    "edges": [
+      { "from": "entry", "to": "authority", "kind": "requires" },
+      { "from": "authority", "to": "qa", "kind": "requires" },
+      { "from": "qa", "to": "entry", "kind": "reference" },
+      { "from": "qa", "to": "codex", "kind": "conditional", "host": "codex" },
+      { "from": "qa", "to": "claude", "kind": "conditional", "host": "claude" },
+      { "from": "qa", "to": "old-codex", "kind": "historical" }
+    ]
+  },
+  "cases": [
+    { "id": "benign-backlink-and-scoped-history", "expected": [] },
+    { "id": "codex-scoped-capability", "host": "codex", "expected": [] },
+    { "id": "claude-scoped-capability", "host": "claude", "expected": [] },
+    { "id": "third-host-common-path", "host": "synthetic-third", "expected": [] },
+    {
+      "id": "two-canonical-owners",
+      "addNodes": [{ "id": "duplicate", "current": true, "canonicalFor": ["authority"] }],
+      "addEdges": [{ "from": "entry", "to": "duplicate", "kind": "reference" }],
+      "expected": ["canonical-owner:authority"]
+    },
+    {
+      "id": "required-cycle-not-a-backlink",
+      "addEdges": [{ "from": "qa", "to": "authority", "kind": "requires" }],
+      "expected": ["required-cycle"]
+    },
+    {
+      "id": "orphan-current-document",
+      "addNodes": [{ "id": "forgotten", "current": true }],
+      "expected": ["orphan-current:forgotten"]
+    },
+    {
+      "id": "unscoped-host-required-edge",
+      "host": "codex",
+      "addEdges": [{ "from": "qa", "to": "codex", "kind": "requires" }],
+      "expected": ["unscoped-host-requirement:qa->codex"]
+    },
+    {
+      "id": "analyze-cannot-reach-write",
+      "addNodes": [{ "id": "write", "current": true, "action": "mutate" }],
+      "addEdges": [{ "from": "authority", "to": "write", "kind": "requires" }],
+      "expected": ["analyze-write:write"]
+    },
+    {
+      "id": "unknown-host-cannot-inherit-codex-capability",
+      "addNodes": [
+        { "id": "native", "current": true, "requiredCapabilities": ["codex-native-review"] }
+      ],
+      "addEdges": [{ "from": "qa", "to": "native", "kind": "requires" }],
+      "expected": ["unsupported-capability:codex-native-review"]
+    },
+    {
+      "id": "declared-host-does-not-grant-unknown-capability",
+      "host": "codex",
+      "addNodes": [
+        { "id": "native", "current": true, "requiredCapabilities": ["unregistered-capability"] }
+      ],
+      "addEdges": [{ "from": "qa", "to": "native", "kind": "requires" }],
+      "expected": ["unsupported-capability:unregistered-capability"]
+    },
+    {
+      "id": "third-host-cannot-inherit-codex-capability",
+      "host": "synthetic-third",
+      "addNodes": [
+        { "id": "native", "current": true, "requiredCapabilities": ["codex-native-review"] }
+      ],
+      "addEdges": [{ "from": "qa", "to": "native", "kind": "requires" }],
+      "expected": ["unsupported-capability:codex-native-review"]
+    }
+  ]
+}

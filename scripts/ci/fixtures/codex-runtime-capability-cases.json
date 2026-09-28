@@ -1,0 +1,383 @@
+[
+  {
+    "id": "native-project-role-success",
+    "expectedExecution": "native-bounded-dispatch",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-turn",
+      "freshness": "current-turn",
+      "provenance": ["host-tool-schema"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        },
+        {
+          "agentType": "repo_explorer",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "omx-astra-compatible-success",
+    "expectedExecution": "native-bounded-dispatch",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "omx",
+      "observationScope": "current-session",
+      "freshness": "current-session",
+      "provenance": ["host-tool-schema", "omx-runtime-overlay"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": false
+        },
+        {
+          "agentType": "repo_explorer",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "luna-rejected",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-model-incompatible",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-turn",
+      "freshness": "current-turn",
+      "provenance": ["host-tool-schema"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveModel": "gpt-5.6-luna",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        },
+        {
+          "agentType": "repo_explorer",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "terra-rejected",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-model-incompatible",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-turn",
+      "freshness": "current-turn",
+      "provenance": ["host-tool-schema"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveModel": "gpt-5.6-terra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        },
+        {
+          "agentType": "repo_explorer",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "legacy-sol-rejected",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-model-incompatible",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-turn",
+      "freshness": "current-turn",
+      "provenance": ["host-tool-schema"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveModel": "gpt-5.6-sol",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        },
+        {
+          "agentType": "repo_explorer",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "fixed-effort-conflict",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-fixed-effort-conflict",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "omx",
+      "observationScope": "current-session",
+      "freshness": "current-session",
+      "provenance": ["host-tool-schema", "omx-runtime-overlay"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "medium",
+          "explicitEffortSupport": false
+        },
+        {
+          "agentType": "repo_explorer",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "missing-role-metadata",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-role-metadata-invalid",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-turn",
+      "freshness": "current-turn",
+      "provenance": ["host-tool-schema"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "unavailable-project-role",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-role-unavailable",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-turn",
+      "freshness": "current-turn",
+      "provenance": ["host-tool-schema"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": false,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        },
+        {
+          "agentType": "repo_explorer",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "generic-explore-does-not-substitute-project-role",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-role-unavailable",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-turn",
+      "freshness": "current-turn",
+      "provenance": ["host-tool-schema"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "researcher",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        },
+        {
+          "agentType": "explore",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "live-permission-denied",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-dispatch-permission-denied",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-turn",
+      "freshness": "current-turn",
+      "provenance": ["host-tool-schema"],
+      "dispatchPermission": "denied",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        },
+        {
+          "agentType": "repo_explorer",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "missing-provenance",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-provenance-missing",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-turn",
+      "freshness": "current-turn",
+      "provenance": [],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "stale-native-evidence",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-evidence-stale",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-session",
+      "freshness": "current-session",
+      "provenance": ["host-tool-schema"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "caller-invented-provenance",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-provenance-unrecognized",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-turn",
+      "freshness": "current-turn",
+      "provenance": ["caller-assertion"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  },
+  {
+    "id": "sol-supported-without-model-request-rejected",
+    "expectedExecution": "leader-sequential",
+    "expectedGap": "runtime-model-incompatible",
+    "evidence": {
+      "schemaVersion": 1,
+      "surfaceMode": "native",
+      "observationScope": "current-turn",
+      "freshness": "current-turn",
+      "provenance": ["host-tool-schema"],
+      "dispatchPermission": "allowed",
+      "roles": [
+        {
+          "agentType": "repo_researcher",
+          "available": true,
+          "effectiveModel": "gpt-5.6-sol",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true,
+          "modelSelection": {
+            "supportedModels": ["gpt-6-astra", "gpt-5.6-sol"],
+            "roleModel": null,
+            "explicitModelSupport": true,
+            "reference": "synthetic-current-host-model-schema"
+          }
+        },
+        {
+          "agentType": "repo_explorer",
+          "available": true,
+          "effectiveModel": "gpt-6-astra",
+          "effectiveEffort": "high",
+          "explicitEffortSupport": true
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "planId": "false-ready-tool-config",
+  "status": "implementation-ready",
+  "evidenceSurface": "tracked-only",
+  "baseline": {
+    "branch": "dev",
+    "head": "1111111111111111111111111111111111111111",
+    "workingTree": {
+      "state": "unknown",
+      "protectedPaths": []
+    },
+    "localRuntime": {
+      "state": "unverified",
+      "requiredEvidence": ["project-trust", "installed-role-roster", "explicit-spawn-effort"]
+    }
+  },
+  "targetPaths": [
+    {
+      "path": ".codex/config.toml",
+      "intendedState": "tracked",
+      "trackingState": "ignored",
+      "trackingEvidence": ".gitignore:47"
+    }
+  ],
+  "configuration": {
+    "nativeChildCap": 3,
+    "proactiveChildCap": 3,
+    "explicitManualChildMax": 6,
+    "precedenceEvidence": "unverified"
+  },
+  "enforcementClaims": [
+    {
+      "claim": "automatic-child-routing",
+      "claimedStrength": "deterministic-static",
+      "executionOwner": "model-mediated"
+    }
+  ],
+  "phases": [
+    {
+      "id": "phase-0",
+      "mutatesTrackedSource": true,
+      "preconditions": [],
+      "branch": null,
+      "prTarget": "dev",
+      "ownedPaths": [],
+      "nonOwnedPaths": [],
+      "work": ["Create project Codex configuration."],
+      "tests": [],
+      "acceptance": ["Project configuration exists."],
+      "excludedWork": [],
+      "rollback": null,
+      "checkpointFields": []
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "project-config-exists",
+      "status": "passed",
+      "evidence": []
+    }
+  ],
+  "openQuestions": [
+    {
+      "id": "oq-runtime-precedence",
+      "status": "open",
+      "blocking": true,
+      "owner": "local-runtime",
+      "requiredEvidence": ["native-smoke"]
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "planId": "implementation-ready-tool-config",
+  "status": "implementation-ready",
+  "evidenceSurface": "local-verified",
+  "baseline": {
+    "branch": "dev",
+    "head": "2222222222222222222222222222222222222222",
+    "workingTree": {
+      "state": "inspected",
+      "protectedPaths": ["DESIGN.md"]
+    },
+    "localRuntime": {
+      "state": "verified",
+      "requiredEvidence": []
+    }
+  },
+  "targetPaths": [
+    {
+      "path": ".codex/config.toml",
+      "intendedState": "tracked",
+      "trackingState": "allowlisted",
+      "trackingEvidence": ".gitignore partial allowlist decision"
+    }
+  ],
+  "configuration": {
+    "nativeChildCap": 6,
+    "proactiveChildCap": 3,
+    "explicitManualChildMax": 6,
+    "precedenceEvidence": "verified"
+  },
+  "enforcementClaims": [
+    {
+      "claim": "repository-guided-child-routing",
+      "claimedStrength": "model-mediated",
+      "executionOwner": "native-runtime"
+    }
+  ],
+  "phases": [
+    {
+      "id": "phase-0",
+      "mutatesTrackedSource": true,
+      "preconditions": ["Fresh origin/dev baseline."],
+      "branch": "chore/project-codex-config",
+      "prTarget": "dev",
+      "ownedPaths": [".gitignore", ".codex/config.toml"],
+      "nonOwnedPaths": ["~/.codex/**", "DESIGN.md"],
+      "work": ["Allowlist and create portable project Codex configuration."],
+      "tests": ["Trackability and leakage negative tests."],
+      "acceptance": ["Clean clone loads reviewed project configuration."],
+      "excludedWork": ["Do not modify global Codex configuration."],
+      "rollback": "Revert the project config and partial allowlist together.",
+      "checkpointFields": [
+        "branch",
+        "head",
+        "changedFiles",
+        "verification",
+        "nextAction",
+        "blocker"
+      ]
+    }
+  ],
+  "acceptance": [
+    {
+      "id": "project-config-exists",
+      "status": "required",
+      "evidence": ["native smoke after implementation"]
+    }
+  ],
+  "openQuestions": []
+}

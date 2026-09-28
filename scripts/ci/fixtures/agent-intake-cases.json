@@ -1,0 +1,122 @@
+[
+  {
+    "id": "legal-analysis",
+    "request": "Legal 개선 지점 분석해줘.",
+    "expected": {
+      "intent": "analyze",
+      "authorizedAction": "produce-analysis",
+      "recommendedPath": "sequential",
+      "prohibitedActions": ["mutate", "produce-plan"],
+      "requiredDomains": ["legal-policy", "frontend", "bff", "backend", "test"],
+      "requiredEvidence": ["repo", "official-current"],
+      "outputFields": [
+        "scope",
+        "facts",
+        "problems",
+        "inferences",
+        "gaps",
+        "recommendations",
+        "confidence"
+      ]
+    },
+    "requiredCapabilities": [
+      "task-envelope-contract",
+      "task-envelope-mapper",
+      "domain-guide-discovery",
+      "analyze-output-contract",
+      "ambiguity-authority-gate"
+    ],
+    "currentGaps": []
+  },
+  {
+    "id": "legal-plan",
+    "request": "Legal FE/BFF/API 책임을 분석하고 개선 계획을 작성해줘.",
+    "expected": {
+      "intent": "plan",
+      "authorizedAction": "produce-plan",
+      "recommendedPath": "sequential",
+      "prohibitedActions": ["mutate"],
+      "requiredDomains": ["legal-policy", "frontend", "bff", "backend", "test"],
+      "requiredEvidence": ["repo", "official-current"],
+      "outputFields": [
+        "planId",
+        "objective",
+        "nonGoals",
+        "baseline",
+        "facts",
+        "inferences",
+        "gaps",
+        "decisions",
+        "openQuestions",
+        "dependencies",
+        "phases",
+        "verificationMatrix",
+        "risks",
+        "mitigations",
+        "finalAcceptance"
+      ]
+    },
+    "requiredCapabilities": [
+      "task-envelope-contract",
+      "task-envelope-mapper",
+      "domain-guide-discovery",
+      "plan-output-contract",
+      "ambiguity-authority-gate"
+    ],
+    "currentGaps": []
+  },
+  {
+    "id": "direct-path",
+    "request": "AGENTS.md의 줄 수를 알려줘.",
+    "expected": {
+      "intent": "answer",
+      "authorizedAction": "answer",
+      "recommendedPath": "direct",
+      "prohibitedActions": ["mutate", "produce-plan", "spawn-child"],
+      "requiredDomains": [],
+      "requiredEvidence": ["repo"],
+      "outputFields": ["facts", "confidence"]
+    },
+    "requiredCapabilities": ["task-envelope-contract", "task-envelope-mapper", "direct-path-gate"],
+    "currentGaps": []
+  },
+  {
+    "id": "ambiguity-oq",
+    "request": "Legal을 개선해줘.",
+    "expected": {
+      "intent": "unknown",
+      "authorizedAction": "inspect",
+      "recommendedPath": "clarify",
+      "prohibitedActions": ["mutate"],
+      "requiredDomains": ["legal-policy"],
+      "requiredEvidence": ["repo", "official-current"],
+      "outputFields": ["ambiguities", "confidence"]
+    },
+    "requiredCapabilities": [
+      "task-envelope-contract",
+      "task-envelope-mapper",
+      "ambiguity-authority-gate"
+    ],
+    "currentGaps": []
+  },
+  {
+    "id": "retry-ceiling",
+    "request": "최신 공식 근거를 확인해 결과를 검증해줘.",
+    "scenario": {
+      "firstFailure": "official-source-unavailable",
+      "secondFailure": "same-cause"
+    },
+    "expected": {
+      "intent": "analyze",
+      "authorizedAction": "produce-analysis",
+      "recommendedPath": "oq-handoff",
+      "prohibitedActions": ["mutate", "retry-again"],
+      "requiredDomains": [],
+      "requiredEvidence": ["official-current"],
+      "outputFields": ["attempts", "blocker", "confidence"],
+      "maxAlternateAttempts": 1
+    },
+    "requiredCapabilities": ["task-envelope-contract", "task-envelope-mapper", "bounded-recovery"],
+    "currentGaps": []
+  }
+]

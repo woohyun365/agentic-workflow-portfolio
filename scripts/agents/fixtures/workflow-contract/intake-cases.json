@@ -1,0 +1,51 @@
+{
+  "evidenceClass": "actual-public-api-characterization",
+  "sources": {
+    "intake": "scripts/agents/common/intake-policy.mjs",
+    "guides": "scripts/agents/common/domain-guide-registry.mjs",
+    "authority": "docs/development/agent-workflows/request-intake/task-envelope.md",
+    "guideContract": "docs/development/agent-workflows/request-intake/context-pack.md"
+  },
+  "sessions": [
+    { "id": "fresh", "prefix": "새 작업입니다. " },
+    { "id": "resume", "prefix": "이전 작업에 이어서 현재 요청만 수행합니다. " }
+  ],
+  "cases": [
+    {
+      "intent": "answer",
+      "request": "API 코드의 역할을 설명해줘.",
+      "action": "answer",
+      "rationale": "An explanation is an answer, not permission to edit."
+    },
+    {
+      "intent": "analyze",
+      "request": "API 오류 원인을 분석해줘.",
+      "action": "produce-analysis",
+      "rationale": "Finding a cause does not authorize a fix or a plan artifact."
+    },
+    {
+      "intent": "plan",
+      "request": "API 변경 계획을 작성해줘.",
+      "action": "produce-plan",
+      "rationale": "Authoring a plan is separate from implementing it."
+    },
+    {
+      "intent": "implement",
+      "request": "API 응답에 필드를 추가해줘.",
+      "action": "mutate",
+      "rationale": "An explicit bounded addition requests implementation."
+    },
+    {
+      "intent": "review",
+      "request": "API 변경을 리뷰해줘.",
+      "action": "produce-analysis",
+      "rationale": "Review produces findings; child inspect authority is not the intake output action."
+    },
+    {
+      "intent": "debug",
+      "request": "API 재현 오류를 고쳐줘.",
+      "action": "mutate",
+      "rationale": "Explicitly fixing a reproduced error permits a bounded fix, unlike cause analysis."
+    }
+  ]
+}

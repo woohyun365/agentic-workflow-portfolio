@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "cross-host-review-qualification-matrix/v1",
+  "qualificationOwner": "authorized-live-qualification-lead",
+  "routineProviderDispatch": "disabled",
+  "directions": [
+    {
+      "direction": "codex-maker-claude-checker",
+      "targetHost": "claude",
+      "staticBinding": "scripts/agents/claude/review-bridge.mjs",
+      "actualInvocation": "not-run",
+      "authRoute": "not-run",
+      "roleLoading": "not-run",
+      "requestedVsResolvedModel": "not-run",
+      "effectiveToolAndMcpScope": "not-run",
+      "readOnlyDenial": "not-run",
+      "resultIdentity": "not-run",
+      "timeoutAndCancel": "not-run",
+      "exactChildCleanup": "not-run"
+    },
+    {
+      "direction": "claude-maker-codex-checker",
+      "targetHost": "codex",
+      "staticBinding": "scripts/agents/codex/review-bridge.mjs",
+      "actualInvocation": "not-run",
+      "authRoute": "not-run",
+      "roleLoading": "not-run",
+      "requestedVsResolvedModel": "not-run",
+      "effectiveToolAndMcpScope": "not-run",
+      "readOnlyDenial": "not-run",
+      "resultIdentity": "not-run",
+      "timeoutAndCancel": "not-run",
+      "exactChildCleanup": "not-run"
+    }
+  ],
+  "activationPrerequisites": [
+    "separately authorized bounded provider qualification",
+    "authenticated local CLI with subscription route confirmed",
+    "disposable read-only source snapshot",
+    "current source/config/role digest and no writer conflict",
+    "atomic invocation lease and exact process cleanup owner",
+    "independent actual model/role/tool/permission observation"
+  ]
+}
