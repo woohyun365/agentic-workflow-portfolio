@@ -1,15 +1,15 @@
-<!doctype html><html lang='ko'><meta charset='utf-8'><title>Agentic Coding System Portfolio</title><style>body{font-family:-apple-system,'Apple SD Gothic Neo',sans-serif;font-size:10pt;line-height:1.45;margin:15mm;color:#111}h1{font-size:16pt;border-bottom:2px solid #333}h2{font-size:12.5pt;margin-top:12px}h3{font-size:11pt;margin:10px 0 4px}blockquote{border-left:4px solid #3b6;background:#f3faf5;margin:8px 0;padding:6px 10px}table{border-collapse:collapse;width:100%;margin:6px 0}td,th{border:1px solid #bbb;padding:3px 5px;font-size:9pt;vertical-align:top}th{background:#eee}code{background:#f2f2f2;padding:0 2px;font-size:8.5pt}pre{background:#f6f6f6;padding:6px;font-size:8.5pt}li{margin:2px 0}</style><body><h1>Context Engineering 기반 AI Agentic Coding System — 비용·품질 균일화 설계</h1>
+<!doctype html><html lang='ko'><meta charset='utf-8'><title>Agentic Coding System Portfolio</title><style>body{font-family:-apple-system,'Apple SD Gothic Neo',sans-serif;font-size:10pt;line-height:1.45;margin:15mm;color:#111}h1{font-size:16pt;border-bottom:2px solid #333}h2{font-size:12.5pt;margin-top:12px}h3{font-size:11pt;margin:10px 0 4px}blockquote{border-left:4px solid #3b6;background:#f3faf5;margin:8px 0;padding:6px 10px}table{border-collapse:collapse;width:100%;margin:6px 0}td,th{border:1px solid #bbb;padding:3px 5px;font-size:9pt;vertical-align:top}th{background:#eee}code{background:#f2f2f2;padding:0 2px;font-size:8.5pt}pre{background:#f6f6f6;padding:6px;font-size:8.5pt}li{margin:2px 0}</style><body><h1>Context Engineering 기반 AI Agentic Coding System — 모델 중립 공통 계약·Adapter와 비용·품질 균일화</h1>
 <p>1인 풀스택 서비스(대학생 룸메이트 매칭, 비공개 저장소)를 AI coding agent(OpenAI Codex, Anthropic Claude Code)와 개발하며 설계·구현한 <b>agent workflow architecture</b>의 발췌본입니다. 학교 식별 정보는 제거했습니다 (프로젝트명 <code>Roommate Matching</code>, 역할 접두어 <code>repo_</code>). 제품 코드는 포함하지 않았고 PR 번호는 비공개 저장소 기준입니다.</p>
-<blockquote>한 줄 요약: <b>같은 요청이라도 도구·모델·설정·대화 이력에 따라 비용과 품질이 들쭉날쭉하던 AI agent 작업을, &quot;무엇을 읽히고(Context), 누가 어떤 모델로 하고(Routing), 누가 검증하는가(Multi-agent QA)&quot;를 저장소가 결정하는 구조로 바꿨습니다.</b></blockquote>
-<h2>1. 문제 — agent 결과의 비용·품질 편차</h2>
+<blockquote>한 줄 요약: <b>Codex 전용으로 묶여 다른 agent·모델을 쓸 수 없던 workflow를 모델 중립 공통 계약으로 추상화하고 Codex·Claude Code를 adapter로 연결했습니다. 그 위에서 &quot;무엇을 읽히고(Context), 누가 어떤 모델로 하고(Routing), 누가 검증하는가(Multi-agent QA)&quot;를 저장소가 결정하게 해, 도구·모델이 바뀌어도 비용과 품질이 같은 기준을 따르게 했습니다.</b></blockquote>
+<h2>1. 문제 — 특정 도구에 묶인 workflow와 agent 결과의 비용·품질 편차</h2>
 <table>
 <tr><th>관찰한 문제</th><th>결과</th></tr>
+<tr><td><b>workflow가 Codex 전용(공통·중립 계층 없음)</b></td><td><b>다른 agent·모델(Claude Code 등)을 쓰면 같은 절차·품질 기준이 적용되지 않음. 주간 한도 소진으로 도구를 바꿔야 할 때 실제로 문제가 됨</b></td></tr>
 <tr><td>역할·모델·effort가 개인/전역 설정에 따라 달라짐(저장소에 기본값 없음)</td><td>clone·세션마다 같은 요청의 품질이 달라짐</td></tr>
 <tr><td>탐색 로그·중간 산출물·전체 대화가 parent context에 누적</td><td>context 낭비, 오래된 정보가 최신 코드보다 우선되는 오류</td></tr>
 <tr><td>&quot;위험해 보이는 단어&quot;로 effort를 정함(위험도와 추론 난이도가 섞임)</td><td>쉬운 작업에 비싼 추론, 어려운 작업에 부족한 추론</td></tr>
 <tr><td>모든 child를 가장 비싼 모델로 실행 / 또는 전면 저가 모델</td><td>주간 사용량 한도 조기 소진 / 품질 저하 위험</td></tr>
 <tr><td>agent의 &quot;완료&quot; 보고·역할 이름·설정 파일 존재를 근거로 판단</td><td>실제 모델·권한·검증이 지켜졌는지 알 수 없음</td></tr>
-<tr><td>workflow가 Codex 전용</td><td>Claude Code로 바꾸면(한도 소진으로 실제 발생) 같은 품질 절차가 사라짐</td></tr>
 </table>
 <h2>2. 해결 설계</h2>
 <h3>2.1 Context Engineering — 무엇을, 언제, 얼마나 읽힐 것인가</h3>

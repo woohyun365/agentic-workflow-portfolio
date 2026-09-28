@@ -1,21 +1,21 @@
-# Context Engineering 기반 AI Agentic Coding System — 비용·품질 균일화 설계
+# Context Engineering 기반 AI Agentic Coding System — 모델 중립 공통 계약·Adapter와 비용·품질 균일화
 
 1인 풀스택 서비스(대학생 룸메이트 매칭, 비공개 저장소)를 AI coding agent(OpenAI Codex, Anthropic Claude Code)와
 개발하며 설계·구현한 **agent workflow architecture**의 발췌본입니다. 학교 식별 정보는 제거했습니다
 (프로젝트명 `Roommate Matching`, 역할 접두어 `repo_`). 제품 코드는 포함하지 않았고 PR 번호는 비공개 저장소 기준입니다.
 
-> 한 줄 요약: **같은 요청이라도 도구·모델·설정·대화 이력에 따라 비용과 품질이 들쭉날쭉하던 AI agent 작업을, "무엇을 읽히고(Context), 누가 어떤 모델로 하고(Routing), 누가 검증하는가(Multi-agent QA)"를 저장소가 결정하는 구조로 바꿨습니다.**
+> 한 줄 요약: **Codex 전용으로 묶여 다른 agent·모델을 쓸 수 없던 workflow를 모델 중립 공통 계약으로 추상화하고 Codex·Claude Code를 adapter로 연결했습니다. 그 위에서 "무엇을 읽히고(Context), 누가 어떤 모델로 하고(Routing), 누가 검증하는가(Multi-agent QA)"를 저장소가 결정하게 해, 도구·모델이 바뀌어도 비용과 품질이 같은 기준을 따르게 했습니다.**
 
-## 1. 문제 — agent 결과의 비용·품질 편차
+## 1. 문제 — 특정 도구에 묶인 workflow와 agent 결과의 비용·품질 편차
 
 | 관찰한 문제 | 결과 |
 |---|---|
+| **workflow가 Codex 전용(공통·중립 계층 없음)** | **다른 agent·모델(Claude Code 등)을 쓰면 같은 절차·품질 기준이 적용되지 않음. 주간 한도 소진으로 도구를 바꿔야 할 때 실제로 문제가 됨** |
 | 역할·모델·effort가 개인/전역 설정에 따라 달라짐(저장소에 기본값 없음) | clone·세션마다 같은 요청의 품질이 달라짐 |
 | 탐색 로그·중간 산출물·전체 대화가 parent context에 누적 | context 낭비, 오래된 정보가 최신 코드보다 우선되는 오류 |
 | "위험해 보이는 단어"로 effort를 정함(위험도와 추론 난이도가 섞임) | 쉬운 작업에 비싼 추론, 어려운 작업에 부족한 추론 |
 | 모든 child를 가장 비싼 모델로 실행 / 또는 전면 저가 모델 | 주간 사용량 한도 조기 소진 / 품질 저하 위험 |
 | agent의 "완료" 보고·역할 이름·설정 파일 존재를 근거로 판단 | 실제 모델·권한·검증이 지켜졌는지 알 수 없음 |
-| workflow가 Codex 전용 | Claude Code로 바꾸면(한도 소진으로 실제 발생) 같은 품질 절차가 사라짐 |
 
 ## 2. 해결 설계
 
