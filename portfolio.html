@@ -1,0 +1,86 @@
+<!doctype html><html lang='ko'><meta charset='utf-8'><title>Agentic Workflow Portfolio</title><style>body{font-family:-apple-system,'Apple SD Gothic Neo',sans-serif;font-size:10.5pt;line-height:1.5;margin:18mm;color:#111}h1{font-size:17pt;border-bottom:2px solid #333}h2{font-size:13pt;margin-top:14px}table{border-collapse:collapse;width:100%;margin:6px 0}td,th{border:1px solid #bbb;padding:3px 5px;font-size:9.5pt;vertical-align:top}th{background:#eee}code{background:#f2f2f2;padding:0 2px;font-size:9pt}pre{background:#f6f6f6;padding:6px;font-size:9pt}</style><body><h1>Agentic Workflow Portfolio — 공통 Agent 계약과 Codex/Claude Code Adapter</h1>
+<p>개인 풀스택 서비스(대학생 룸메이트 매칭, 비공개 저장소)를 AI coding agent와 개발하며 설계·구현한 <b>agent workflow harness</b>의</p>
+<p>발췌본입니다. 학교 식별 정보는 제거했습니다(프로젝트명 <code>Roommate Matching</code>, 역할 접두어 <code>repo_</code>).</p>
+<p>제품 코드는 포함하지 않았으며, 링크의 PR 번호는 비공개 저장소 기준입니다.</p>
+<h2>풀려고 한 문제</h2>
+<ul>
+<li><b>AI가 만든 결과를 믿을 근거가 없었다.</b> Agent의 &quot;완료&quot; 문장, 역할 이름, 설정 파일 존재만으로는 실제 모델·권한·검증이</li>
+<p>   지켜졌는지 알 수 없었습니다.</p>
+<li><b>처음 만든 workflow가 Codex 전용이었다.</b> 모델·effort·QA 규칙이 Codex에 묶여 있어 Claude Code로 옮기면</li>
+<p>   같은 품질 절차가 적용되지 않았습니다. (주간 사용량 한도 때문에 host를 바꿔야 하는 실제 상황이 있었습니다.)</p>
+<li><b>Hook·설정 같은 통제 장치가 고장 났을 때의 동작</b>이 보장인지 아닌지 구분되지 않았습니다.</li>
+</ul>
+<h2>설계 한 줄 요약</h2>
+<pre>
+공통 계약(요청 권한 → 문서 탐색 → 위임 → 독립 QA → 인계)
+  ├─ Codex adapter : 모델/effort 라우팅, 필수 독립 QA, 복구 규칙, OMX
+  ├─ Claude adapter: 등록된 task만 native subagent 호출, 모델 검사, 결과 수집, 독립 리뷰, 권한 gate
+  └─ 새 host        : 같은 계약 + conformance test (synthetic 제3 adapter로 검증)
+</pre>
+<p>모든 규칙에 강도를 표기합니다: <code>deterministic-static</code>(테스트) / <code>advisory-policy</code>(문서) / <code>model-mediated</code>(agent 판단) /</p>
+<p><code>native-runtime</code>(host 강제). 정적 테스트 통과를 실제 모델·권한 입증으로 세지 않습니다.</p>
+<h2>폴더 안내</h2>
+<table>
+<tr><th>경로</th><th>내용</th></tr>
+<tr><td><code>AGENTS.md</code>, <code>CLAUDE.md</code></td><td>모든 agent 공통 저장소 지침 / Claude 진입점</td></tr>
+<tr><td><code>docs/development/agent-workflows/</code></td><td>공통 계약(실행·orchestration·QA·위임·계획 lifecycle)과 <code>adapters/</code>(Codex·Claude·교차 인계)</td></tr>
+<tr><td><code>docs/development/agentic-engineering-methodology.md</code></td><td>채택한 방법론과 적용 수준(과장 금지 원칙 포함)</td></tr>
+<tr><td><code>docs/development/agentic-orchestration-case-study.md</code></td><td>Codex 단계의 parent–subagent 설계 case study</td></tr>
+<tr><td><code>.codex/</code>, <code>.claude/</code></td><td>역할 정의(TOML/Markdown), Claude hook·권한 설정</td></tr>
+<tr><td><code>scripts/agents/{common,codex,claude,bridge}</code></td><td>계약을 실제로 소비하는 코드(정책·등록·hook·collector·preflight)</td></tr>
+<tr><td><code>scripts/ci/*.test.mjs</code></td><td>위 코드의 회귀·negative 테스트</td></tr>
+<tr><td><code>EVIDENCE.md</code></td><td>실제로 확인된 결과와 수치</td></tr>
+<tr><td><code>ROADMAP.md</code></td><td>설계만 존재하거나 검증 대기인 항목</td></tr>
+</table>
+<p>이 발췌본은 원 저장소의 다른 문서(제품 정책, GitHub 전략 등)를 포함하지 않으므로 일부 상대 링크는 열리지 않습니다.</p><h1>확인된 결과 (2026-09-28 기준)</h1>
+<p>&quot;확인됨&quot;은 병합된 PR, CI, 테스트 실행 출력 또는 실제 세션 기록으로 확인한 것만 적었습니다.</p>
+<p>PR 번호는 비공개 저장소 기준입니다.</p>
+<h2>1. 통합된 변경</h2>
+<table>
+<tr><th>단위</th><th>내용</th><th>상태</th></tr>
+<tr><td>공통 계약 재설계</td><td>71개 개발 문서를 문서 graph로 감사, host-neutral 계약·계획 lifecycle·adapter conformance</td><td>PR #484 병합</td></tr>
+<tr><td>Codex 재접합</td><td>Codex도 공통 계약을 소비하도록 재연결, 기존 모델/QA/복구 동작 회귀 고정, preflight 버그 수정</td><td>PR #485 병합</td></tr>
+<tr><td>Claude adapter</td><td>진입점·task 등록·hook·결과 수집·독립 리뷰·권한 gate</td><td>PR #487 진행 중(최종 commit CI 11/11 통과, 병합 전)</td></tr>
+</table>
+<h2>2. 테스트</h2>
+<ul>
+<li>Claude/Codex/공통 workflow 대상 테스트: <b>467/467 통과</b>, 저장소 전체 정책 테스트 <b>1116/1116 통과</b></li>
+<p>  (최신 작업 트리 기준. 병합 전 최종 commit 기준은 1105/1105).</p>
+<li>Negative 테스트 예: 모델 누락·불일치, 다른 세션, 만료, 입력 변조, 재사용, 권한 모드 변경, 독립 리뷰어가 자기 자신을</li>
+<p>  검토하는 경우, 리뷰 결과를 다른 리뷰어로 바꿔치기하는 경우, 이미 실행된 작업에 뒤늦게 권한을 붙이는 경우.</p>
+</ul>
+<h2>3. 실제 Claude Code 세션에서 관측한 것 (일반 <code>auto</code> 모드)</h2>
+<table>
+<tr><th>관측</th><th>결과</th></tr>
+<tr><td>잘못된 모델·모델 누락 요청</td><td>실행 전 hook이 거부, subagent 0개 (여러 회)</td></tr>
+<tr><td>입력 파일이 등록 후 바뀐 요청</td><td><code>input file drift</code>로 거부</td></tr>
+<tr><td>Sonnet executor 구현 → Opus 독립 reviewer → 공통 QA</td><td>완료 판정 통과. 변경 파일 1개(2,900개 경로 대조), writer lease 회수</td></tr>
+<tr><td>Sonnet researcher 결과</td><td>Opus 독립 reviewer가 <b>공식 문서에 없는 주장(과잉 인용)을 FAIL로 적발</b>, Parent가 원문으로 재현, 완료 거부</td></tr>
+<tr><td>Haiku explorer</td><td>정확한 모델 ID와 oracle 일치 확인</td></tr>
+<tr><td>권한 grant 없이 실행된 subagent</td><td>모델·결과가 맞아도 완료 판정 거부(<code>missing-permission-grant</code>)</td></tr>
+</table>
+<h2>4. 독립 리뷰가 실제로 잡아낸 결함</h2>
+<ul>
+<li>소스 리뷰 1라운드 FAIL(중간 3건): 리뷰어 &quot;쇼핑&quot;(FAIL 뒤 다른 리뷰어 PASS로 우회), 빈 JSON 결과 통과, 리뷰어가</li>
+<p>  실행 주체를 겸함 → 테스트로 재현 후 수정.</p>
+<li>2라운드 FAIL(중간 1건): 전달됐지만 기록되지 않은 FAIL 우회 → 수정. 3라운드 PASS.</li>
+<li>권한 gate 리뷰: 이미 실행된 작업에 나중에 권한을 발급하는 우회 → 재현·수정 후 PASS.</li>
+</ul>
+<h2>5. 공식 문서 대조로 바뀐 설계</h2>
+<ul>
+<li>Claude Code 공식 hooks 문서 확인 결과, hook이 실패하면 호출이 <b>그대로 진행</b>됩니다(fail-open).</li>
+<li>이를 근거로 &quot;hook만으로 막는다&quot;는 가정을 버렸습니다. 대신 역할별 <code>ask</code> 권한 규칙 + <code>PermissionRequest</code> hook 구조로 바꿔,</li>
+<p>  hook이 고장 나면 자동 승인되지 않고 <b>사람의 승인 요청으로 넘어가도록</b>(fail-safe to human) 설계했습니다.</p>
+<p>  새 세션에서의 실측은 대기 중입니다(ROADMAP 참조).</p>
+</ul><h1>설계·검증 대기 항목 (구현 완료 아님)</h1>
+<p>아래는 계획 문서에만 있거나 실측이 끝나지 않은 항목입니다. 완료로 주장하지 않습니다.</p>
+<table>
+<tr><th>항목</th><th>상태</th><th>내용</th></tr>
+<tr><td>권한 gate 실측</td><td>구현·리뷰 완료, <b>live 검증 대기</b></td><td>정상 / hook 부재 / timeout / 잘못된 출력 / deny 규칙의 7개 시나리오를 새 세션에서 실행해 &quot;고장 시 사람 승인으로 넘어가는지&quot; 확인</td></tr>
+<tr><td>Claude subagent 아키텍처 재설계</td><td><b>설계</b></td><td>모델과 effort를 함께 고르는 profile(역할 × 모델 × effort 단계), 관측된 effort와 기대값 대조, 실패 원인별 복구(정보 충분한데 오답이면 상위 모델, 누락·중단이면 effort 상향; 공식 권고 근거)</td></tr>
+<tr><td>운영 helper</td><td><b>설계</b></td><td>수작업 JSON 없이 task 등록·독립 리뷰 packet을 만드는 명령, Parent 동시 쓰기 차단</td></tr>
+<tr><td>공통 지침 누락 점검</td><td><b>설계</b></td><td>Codex 문서에만 있는 일반 원칙(복구 한도, 품질 stop 등)을 공통 계약으로 승격</td></tr>
+<tr><td>교차 host 리뷰 실행기</td><td><b>설계</b>(현재 fake process만)</td><td>Claude Lead ↔ Codex CLI 단발성 읽기 전용 리뷰, 인증·권한·정리 검증</td></tr>
+<tr><td>통합 live 자격 검증</td><td><b>설계</b></td><td>양방향 maker/checker, 계획 인계(Codex ↔ Claude), OMC/OMX 수명주기</td></tr>
+</table>
+<p>알려진 한계: hook 기반 통제는 사람이 승인 요청을 수락하면 막지 못합니다(대신 완료 판정에서 거부). 생산성이나 품질 향상 수치는 측정하지 않았습니다.</p></body></html>
