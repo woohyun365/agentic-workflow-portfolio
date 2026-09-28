@@ -9,6 +9,7 @@
 | 운영 helper | **설계** | 수작업 JSON 없이 task 등록·독립 리뷰 packet을 만드는 명령, Parent 동시 쓰기 차단 |
 | 공통 지침 누락 점검 | **설계** | Codex 문서에만 있는 일반 원칙(복구 한도, 품질 stop 등)을 공통 계약으로 승격 |
 | 교차 host 리뷰 실행기 | **설계**(현재 fake process만) | Claude Lead ↔ Codex CLI 단발성 읽기 전용 리뷰, 인증·권한·정리 검증 |
+| 비용 실측 설계 | **설계** | 같은 task·snapshot에서 Parent+child+QA+재작업+복구 전체 사용량을 비교(단가 비율이 아닌 총량) |
 | 통합 live 자격 검증 | **설계** | 양방향 maker/checker, 계획 인계(Codex ↔ Claude), OMC/OMX 수명주기 |
 
 알려진 한계: hook 기반 통제는 사람이 승인 요청을 수락하면 막지 못합니다(대신 완료 판정에서 거부). 생산성이나 품질 향상 수치는 측정하지 않았습니다.
